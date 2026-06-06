@@ -1,0 +1,43 @@
+name: Run Postman Collection
+
+on:
+  push:
+    branches: 
+      - '**' # Matches all branches, including main and master
+
+jobs:
+  api-testing:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the repository code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Step 3: Install Newman and the HTMLExtra reporter
+      - name: Install Newman
+        run: |
+          npm install -g newman
+          npm install -g newman-reporter-htmlextra
+
+      # Step 4: Execute the Postman Collection
+      - name: Run Postman Collection
+        run: |
+          newman run "GitHub Developer.postman_collection.json" \
+            -r cli,htmlextra \
+            --reporter-htmlextra-export reports/report.html
+
+      # Step 5: Upload test reports as an artifact
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v4
+        if: always() # Ensures report uploads even if tests fail
+        with:
+          name: postman-html-report
+          path: reports/report.html
+          retention-days: 5
